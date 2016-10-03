@@ -1,0 +1,29 @@
+{
+  "name": "aramsay-framework",
+  "version": "1.0.0",
+  "description": "Node server components.",
+  "main": "index.ts",
+  "scripts": {
+    "build": "npm test && rimraf dist && tsc --project tsconfig.json",
+    "test": "set JASMINE_CONFIG_PATH=jasmine.json&& jasmine-ts src/**/*.spec.ts"
+  },
+  "keywords": [
+    "node",
+    "typescript",
+    "mongodb"
+  ],
+  "author": "Andrew Ramsay <aramsaybusiness@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "jasmine": "^2.5.2",
+    "jasmine-ts": "0.0.3",
+    "rimraf": "^2.5.4",
+    "typescript": "^2.0.3",
+    "typings": "^1.4.0"
+  },
+  "dependencies": {
+    "aramsay-injector": "^1.0.1",
+    "async": "^2.0.1",
+    "mongoose": "^4.6.2"
+  }
+}
