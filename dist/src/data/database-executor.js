@@ -12,16 +12,24 @@ var aramsay_injector_1 = require('aramsay-injector');
 var DatabaseExecutor = (function () {
     function DatabaseExecutor() {
     }
-    DatabaseExecutor.prototype.findMany = function (query, callback) {
-        var self = this;
+    DatabaseExecutor.prototype.deleteRecordById = function (query, callback) {
         var Model = query.model;
-        var mongooseQuery = Model.find(query.condition, query.fields, query.options);
-        self.runQuery(query, mongooseQuery, callback);
+        Model.findByIdAndRemove(query.id, query.options, callback);
+    };
+    DatabaseExecutor.prototype.deleteRecords = function (query, callback) {
+        var Model = query.model;
+        Model.remove(query.condition, callback);
     };
     DatabaseExecutor.prototype.findById = function (query, callback) {
         var self = this;
         var Model = query.model;
         var mongooseQuery = Model.findById(query.id, query.fields, query.options);
+        self.runQuery(query, mongooseQuery, callback);
+    };
+    DatabaseExecutor.prototype.findMany = function (query, callback) {
+        var self = this;
+        var Model = query.model;
+        var mongooseQuery = Model.find(query.condition, query.fields, query.options);
         self.runQuery(query, mongooseQuery, callback);
     };
     DatabaseExecutor.prototype.findOne = function (query, callback) {
@@ -39,15 +47,6 @@ var DatabaseExecutor = (function () {
         var Model = query.model;
         Model.findByIdAndUpdate(query.id, query.data, query.options, callback);
     };
-    DatabaseExecutor.prototype.deleteRecords = function (query, callback) {
-        var Model = query.model;
-        callback();
-        Model.remove(query.condition, callback);
-    };
-    DatabaseExecutor.prototype.deleteRecordById = function (query, callback) {
-        var Model = query.model;
-        Model.findByIdAndRemove(query.id, query.options, callback);
-    };
     DatabaseExecutor.prototype.runQuery = function (query, mongooseQuery, callback) {
         for (var _i = 0, _a = query.populate || []; _i < _a.length; _i++) {
             var property = _a[_i];
@@ -62,5 +61,4 @@ var DatabaseExecutor = (function () {
     return DatabaseExecutor;
 }());
 exports.DatabaseExecutor = DatabaseExecutor;
-module.exports = DatabaseExecutor;
 //# sourceMappingURL=database-executor.js.map
