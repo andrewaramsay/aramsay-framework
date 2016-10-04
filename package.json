@@ -1,8 +1,8 @@
 {
   "name": "aramsay-framework",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Node server components.",
-  "main": "index.ts",
+  "main": "dist/index.js",
   "scripts": {
     "build": "npm test && rimraf dist && tsc --project tsconfig.json",
     "test": "set JASMINE_CONFIG_PATH=jasmine.json&& jasmine-ts src/**/*.spec.ts --watch src/**/*.ts",
