@@ -1,21 +1,31 @@
 import { Injectable } from 'aramsay-injector';
-import { Model, Document } from 'mongoose';
+import { Model, Document, Query as MongooseQuery } from 'mongoose';
 import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
 import { NodeCallback, VoidNodeCallback } from '../common';
 
 @Injectable()
 export class DatabaseExecutor {
-  findMany<T extends Document>(query: Query<T>, callback: NodeCallback<T[]>) {
-    const self = this;
+  deleteRecordById<T extends Document>(query: QueryById<T>, callback: VoidNodeCallback) {
     let Model = query.model;
-    let mongooseQuery = Model.find(query.condition, query.fields, query.options);
-    self.runQuery(query, mongooseQuery, callback);
+    Model.findByIdAndRemove(query.id, query.options, callback);
+  }
+
+  deleteRecords<T extends Document>(query: Query<T>, callback: VoidNodeCallback) {
+    let Model = query.model;
+    Model.remove(query.condition, callback);
   }
 
   findById<T extends Document>(query: QueryById<T>, callback: NodeCallback<T>) {
     const self = this;
     let Model = query.model;
     let mongooseQuery = Model.findById(query.id, query.fields, query.options);
+    self.runQuery(query, mongooseQuery, callback);
+  }
+
+  findMany<T extends Document>(query: Query<T>, callback: NodeCallback<T[]>) {
+    const self = this;
+    let Model = query.model;
+    let mongooseQuery = Model.find(query.condition, query.fields, query.options);
     self.runQuery(query, mongooseQuery, callback);
   }
 
@@ -37,18 +47,7 @@ export class DatabaseExecutor {
     Model.findByIdAndUpdate(query.id, query.data, query.options, callback);
   }
 
-  deleteRecords<T extends Document>(query: Query<T>, callback: VoidNodeCallback) {
-    let Model = query.model;
-    callback();
-    Model.remove(query.condition, callback);
-  }
-
-  deleteRecordById<T extends Document>(query: QueryById<T>, callback: VoidNodeCallback) {
-    let Model = query.model;
-    Model.findByIdAndRemove(query.id, query.options, callback);
-  }
-
-  private runQuery<T extends Document>(query: QueryBase<T>, mongooseQuery: any, callback: NodeCallback<T | T[]>) {
+  private runQuery<T extends Document>(query: QueryBase<T>, mongooseQuery: MongooseQuery<T | T[]>, callback: NodeCallback<T | T[]>) {
     for (let property of query.populate || []) {
       mongooseQuery = mongooseQuery.populate(property);
     }
