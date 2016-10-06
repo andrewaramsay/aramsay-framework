@@ -55,7 +55,7 @@ var DatabaseExecutor = (function () {
         mongooseQuery.exec(callback);
     };
     DatabaseExecutor = __decorate([
-        aramsay_injector_1.Injectable(), 
+        aramsay_injector_1.Injectable({ singleton: true }), 
         __metadata('design:paramtypes', [])
     ], DatabaseExecutor);
     return DatabaseExecutor;

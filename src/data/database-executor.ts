@@ -3,7 +3,7 @@ import { Model, Document, Query as MongooseQuery } from 'mongoose';
 import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
 import { NodeCallback, VoidNodeCallback } from '../common';
 
-@Injectable()
+@Injectable({ singleton: true })
 export class DatabaseExecutor {
   deleteRecordById<T extends Document>(query: QueryById<T>, callback: VoidNodeCallback) {
     let Model = query.model;

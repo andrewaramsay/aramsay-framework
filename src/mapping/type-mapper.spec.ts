@@ -112,6 +112,109 @@ describe('TypeMapper', () => {
             expect(target.toBusinessModel).not.toHaveBeenCalled();
         });
     });
+    
+    describe('fromBusinessModel', () => {
+        let businessModel: BusinessModel;
+
+        beforeEach(() => {
+            businessModel = { value: 'thing' };
+        });
+
+        it('maps a single BusinessModel to DataModel', done => {
+            target.fromBusinessModel(businessModel, (err: Error, dataModel: DataModel) => {
+                expect(dataModel.someValue).toBe('thing');
+                done();
+            });
+        });
+    });
+
+    describe('fromBusinessModels', () => {
+        let businessModels: BusinessModel[];
+
+        beforeEach(() => {
+            businessModels  = [
+                { value: 'item 1' },
+                { value: 'item 2' },
+                { value: 'item 3' },
+            ];
+        });
+        
+        it('maps an array of DataModel to an array of BusinessModel', done => {
+            target.fromBusinessModels(businessModels, (err: Error, dataModels: DataModel[]) => {
+                expect(dataModels.length).toBe(3);
+                expect(dataModels[0].someValue).toBe('item 1');
+                expect(dataModels[1].someValue).toBe('item 2');
+                expect(dataModels[2].someValue).toBe('item 3');
+                done();
+            });
+        });
+    });
+
+    describe('mapFromCallback', () => {
+        let businessModel___: BusinessModel;
+        let spy: jasmine.Spy;
+
+        beforeEach(() => {
+            businessModel___ = { value: 'thing' };
+            spy = jasmine.createSpy('callback');
+        });
+        
+        it('should create a callback that maps a single item', () => {
+            target.mapFromCallback(spy)(null, businessModel___);
+            expect(spy).toHaveBeenCalledWith(null, { someValue: 'thing' });
+        });
+
+        it('should call callback with only error if an error is thrown', () => {
+            let err = new Error('something broke');
+
+            target.mapFromCallback(spy)(err);
+            
+            expect(spy).toHaveBeenCalledWith(err);
+        });
+
+        it('should not map objects if an error is returned', () => {
+            spyOn(target, 'fromBusinessModel');
+
+            target.mapFromCallback(spy)(new Error('something broke'));
+
+            expect(target.fromBusinessModel).not.toHaveBeenCalled();
+        });
+    });
+
+    describe('mapFromArrayCallback', () => {
+        let businessModel: BusinessModel[];
+        let spy: jasmine.Spy;
+
+        beforeEach(() => {
+            businessModel  = [
+                { value: 'item 1' },
+                { value: 'item 2' },
+                { value: 'item 3' },
+            ];
+            spy = jasmine.createSpy('callback');
+        });
+        
+        it('should create a callback that maps an array of items', () => {
+            target.mapFromArrayCallback(spy)(null, businessModel);
+            expect(spy).toHaveBeenCalledWith(null, [{ someValue: 'item 1' }, { someValue: 'item 2' }, { someValue: 'item 3' }]);
+        });
+
+        it('should call callback with only error if an error is thrown', () => {
+            let err = new Error('something broke');
+
+            target.mapFromArrayCallback(spy)(err);
+
+            expect(spy).toHaveBeenCalledWith(err);
+        });
+
+        it('should not map objects if an error is returned', () => {
+            spyOn(target, 'fromBusinessModel');
+
+            target.mapFromArrayCallback(spy)(new Error('something broke'));
+            
+            expect(target.fromBusinessModel).not.toHaveBeenCalled();
+        });
+    });
 });
 
 interface BusinessModel {
@@ -125,5 +228,9 @@ interface DataModel {
 class SampleMapper extends TypeMapper<BusinessModel, DataModel> {
     toBusinessModel(dataModel: DataModel, callback: NodeCallback<BusinessModel>): void {
         callback(null, { value: dataModel.someValue });
+    }
+
+    fromBusinessModel(businessModel: BusinessModel, callback: NodeCallback<DataModel>): void {
+        callback(null, { someValue: businessModel.value });
     }
 }
