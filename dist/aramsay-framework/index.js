@@ -4,6 +4,6 @@ function __export(m) {
 }
 __export(require('./src/common'));
 __export(require('./src/data'));
-__export(require('./src/mapping/type-mapper'));
+__export(require('./src/mapping'));
 __export(require('./src/testing'));
 //# sourceMappingURL=index.js.map
