@@ -1,5 +1,4 @@
 import { Injectable, Inject } from 'aramsay-injector';
-import { Model, Document, Query as MongooseQuery } from 'mongoose';
 // import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
 import { NodeCallback, VoidNodeCallback } from '../common';
 import { MongoClient, Db } from 'mongodb';
