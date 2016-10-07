@@ -10,7 +10,7 @@ export interface DbFind<T> {
     filter?: Object;
     fields?: Object;
     paging?: Paging;
-    mapResults(record: any, callback: NodeCallback<T>): void;
+    mapResults(record: MongoRecord, callback: NodeCallback<T>): void;
 }
 export interface DbInsert {
     collection: string;
@@ -29,4 +29,7 @@ export interface CollectionUpdateOptions {
     wtimeout?: number;
     j?: boolean;
     bypassDocumentValidation?: boolean;
+}
+export interface MongoRecord {
+    [key: string]: any;
 }
