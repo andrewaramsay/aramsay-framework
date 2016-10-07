@@ -1,3 +1,2 @@
-export { NodeCallback, VoidNodeCallback } from './types';
-export { MomentAdapter } from './moment-adapter';
+export { NodeCallback, VoidNodeCallback, Paging } from './types';
 export { TimeoutAdapter } from './timeout-adapter';

@@ -1,56 +1,75 @@
-import { Injectable } from 'aramsay-injector';
+import { Injectable, Inject } from 'aramsay-injector';
 import { Model, Document, Query as MongooseQuery } from 'mongoose';
-import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
+// import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
 import { NodeCallback, VoidNodeCallback } from '../common';
+import { MongoClient, Db } from 'mongodb';
+import { map } from 'async';
 
-@Injectable({ singleton: true })
+import { DbFind, DbDelete, DbInsert, DbUpdate } from './types';
+
+export const mongoDbInjectorToken = 'aramsay-framework:MongoDb';
+
+@Injectable()
 export class DatabaseExecutor {
-  deleteRecordById<T extends Document>(query: QueryById<T>, callback: VoidNodeCallback) {
-    let Model = query.model;
-    Model.findByIdAndRemove(query.id, query.options, callback);
-  }
-
-  deleteRecords<T extends Document>(query: Query<T>, callback: VoidNodeCallback) {
-    let Model = query.model;
-    Model.remove(query.condition, callback);
-  }
-
-  findById<T extends Document>(query: QueryById<T>, callback: NodeCallback<T>) {
-    const self = this;
-    let Model = query.model;
-    let mongooseQuery = Model.findById(query.id, query.fields, query.options);
-    self.runQuery(query, mongooseQuery, callback);
-  }
-
-  findMany<T extends Document>(query: Query<T>, callback: NodeCallback<T[]>) {
-    const self = this;
-    let Model = query.model;
-    let mongooseQuery = Model.find(query.condition, query.fields, query.options);
-    self.runQuery(query, mongooseQuery, callback);
-  }
-
-  findOne<T extends Document>(query: Query<T>, callback: NodeCallback<T>) {
-    const self = this;
-    let Model = query.model;
-    let mongooseQuery = Model.findOne(query.condition, query.fields, query.options);
-    self.runQuery(query, mongooseQuery, callback);
-  }
-
-  saveData<T extends Document>(write: DbWrite<T>, callback: NodeCallback<string | number>) {
-    let Model = write.model;
-    let model = new Model(write.data);
-    model.save((err: Error, rec: T) => callback(err, rec && rec.id));
-  }
-
-  updateRecordById<T extends Document>(query: DbWriteById<T>, callback: NodeCallback<T>) {
-    let Model = query.model;
-    Model.findByIdAndUpdate(query.id, query.data, query.options, callback);
-  }
-
-  private runQuery<T extends Document>(query: QueryBase<T>, mongooseQuery: MongooseQuery<T | T[]>, callback: NodeCallback<T | T[]>) {
-    for (let property of query.populate || []) {
-      mongooseQuery = mongooseQuery.populate(property);
+    constructor(
+        @Inject(mongoDbInjectorToken) private db: Db) {
     }
-    mongooseQuery.exec(callback);
-  }
+
+    deleteMany(query: DbDelete, callback: VoidNodeCallback): void {
+        let collection = this.db.collection(query.collection);
+        collection.deleteMany(query.filter, query.options, callback);
+    }
+
+    deleteOne(query: DbDelete, callback: VoidNodeCallback): void {
+        let collection = this.db.collection(query.collection)
+        collection.deleteOne(query.filter, query.options, callback);
+    }
+
+    findMany<T>(query: DbFind<T>, callback: NodeCallback<T[]>): void {
+        let collection = this.db.collection(query.collection);
+        let cursor = collection.find(query.filter);
+        if (query.fields) {
+            cursor = cursor.project(query.fields);
+        }
+
+        if (query.paging) {
+            cursor = cursor.skip(query.paging.offset).limit(query.paging.limit);
+        }
+
+        cursor.toArray((err, records) => {
+            if (err) { return callback(err); }
+            map<any, T>(records, query.mapResults.bind(query), callback);
+        });
+    }
+
+    findOne<T>(query: DbFind<T>, callback: NodeCallback<T>): void {
+        let collection = this.db.collection(query.collection);
+        let cursor = collection.find(query.filter);
+        if (query.fields) {
+            cursor = cursor.project(query.fields);
+        }
+
+        cursor.limit(1).next((err, record) => {
+            if (err) { return callback(err); }
+            query.mapResults(record, callback);
+        });
+    }
+
+    insert(insert: DbInsert, callback: VoidNodeCallback): void {
+        let collection = this.db.collection(insert.collection);
+        if (insert.documents.length > 1) {
+            collection.insertMany(insert.documents, insert.options, callback);
+        } else {
+            collection.insertOne(insert.documents[0], insert.options, callback);
+        }
+    }
+
+    update(update: DbUpdate, callback: VoidNodeCallback): void {
+        let collection = this.db.collection(update.collection);
+        if (update.documents.length > 1) {
+            collection.updateMany(update.filter, update.documents, update.options, callback);
+        } else {
+            collection.updateOne(update.filter, update.documents[0], update.options, callback);
+        }
+    }
 }

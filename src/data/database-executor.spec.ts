@@ -1,255 +1,350 @@
 /// <reference path="../../typings/index.d.ts" />
-import { Document, Schema, model, Model, Query as MongooseQuery } from 'mongoose';
+import { Db, Collection, Cursor, CollectionOptions, CollectionInsertOneOptions } from 'mongodb';
 import Spy = jasmine.Spy;
 
 import { DatabaseExecutor } from './database-executor';
-import { Query, QueryById, DbWrite, DbWriteById } from './types';
-import { NodeCallback } from '../common';
-import { callCallback } from '../testing';
-
+import { DbDelete, DbFind, DbInsert, DbUpdate, CollectionUpdateOptions } from './types';
+import { NodeCallback, Paging } from '../common';
+import { callCallback, spy } from '../testing';
 
 describe('DatabaseExecutor', () => {
     let target: DatabaseExecutor;
+    let db: Db;
+    let collection: Collection;
     let callback: NodeCallback<any>
 
     beforeEach(() => {
-        target = new DatabaseExecutor();
-        target.updateRecordById;
-
         callback = jasmine.createSpy('callback');
-    });
-
-    describe('deleteRecordById', () => {
-        let findByIdAndRemove: Spy;
-        let queryById: FindSampleById;
+        db = jasmine.createSpyObj<Db>('db', ['collection'])
+        collection = jasmine.createSpyObj<Collection>('collection', ['find', 'insertOne', 'insertMany', 'updateOne', 'updateMany', 'deleteOne', 'deleteMany']);
         
+        target = new DatabaseExecutor(db);
+
+        spy(db.collection).and.returnValue(collection);
+    });
+
+    describe('deleteMany', () => {
+        let deleteSample: DeleteSample
+
         beforeEach(() => {
-            findByIdAndRemove = spyOn(SampleModel, 'findByIdAndRemove');
-            queryById = new FindSampleById();
-        })
+            deleteSample = new DeleteSample();    
+        });
         
-        it('calls findIdAndRemove on the model', () => {
-            queryById.id = 'foo';
-            queryById.options = { this: 'is options' };
-            
-            target.deleteRecordById(queryById, callback);
-            
-            expect(findByIdAndRemove).toHaveBeenCalledWith('foo', { this: 'is options' }, callback);
+        it('gets the collection from the database', () => {
+            deleteSample.collection = 'test collection';
+
+            target.deleteMany(deleteSample, callback);
+
+            expect(db.collection).toHaveBeenCalledWith('test collection');
+        });
+
+        it('callls deleteMany on the collection', () => {
+            deleteSample.filter = { this: 'is a filter' };
+            deleteSample.options = { w: 'this is the options' };
+            target.deleteMany(deleteSample, callback);
+
+            expect(collection.deleteMany).toHaveBeenCalledWith({ this: 'is a filter' }, { w: 'this is the options' }, callback);
         });
     });
-    
-    describe('deleteRecords', () => {
-        let remove: Spy;
-        let query: FindSample;
+
+    describe('deleteOne', () => {
+        let deleteSample: DeleteSample
 
         beforeEach(() => {
-            remove = spyOn(SampleModel, 'remove');
-            query = new FindSample();
+            deleteSample = new DeleteSample();    
         });
-
-        it('calls remove on the model', () => {
-            query.condition = { this: 'is a condition' };
-
-            target.deleteRecords(query, callback);
-
-            expect(remove).toHaveBeenCalledWith({ this: 'is a condition' }, callback);
-        });
-    });
-    
-    describe('findById', () => {
-        let findById: Spy;
-        let queryById: FindSampleById;
-        let mongooseQuery: MongooseQuery<Sample>;
-
-        beforeEach(() => {
-            queryById = new FindSampleById();
-            mongooseQuery = jasmine.createSpyObj<MongooseQuery<Sample>>('mongooseQuery', ['exec', 'populate']);
-            (<Spy>mongooseQuery.populate).and.returnValue(mongooseQuery);
-
-            findById = spyOn(SampleModel, 'findById').and.returnValue(mongooseQuery);
-        });
-
-        it('calls findById on the model', () => {
-            queryById.id = 'foo';
-            queryById.options = { this: 'is options' };
-            queryById.fields = { this: 'is fields' };
-            
-            target.findById(queryById, callback);
-            
-            expect(findById).toHaveBeenCalledWith('foo', { this: 'is fields' }, { this: 'is options' });
-        });
-
-        it('calls populate for any properties specified in populate', () => {
-            queryById.populate = ['prop1', 'prop2'];
-
-            target.findById(queryById, callback);
-
-            expect(mongooseQuery.populate).toHaveBeenCalledTimes(2);
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop1');
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop2');
-        });
-
-        it('passes the callback to exec on the mongooseQuery', () => {
-            target.findById(queryById, callback);
-
-            expect(mongooseQuery.exec).toHaveBeenCalledWith(callback);
-        });
-    });
-    
-    describe('findMany', () => {
-        let find: Spy;
-        let query: FindSample;
-        let mongooseQuery: MongooseQuery<Sample>;
-
-        beforeEach(() => {
-            query = new FindSample();
-            mongooseQuery = jasmine.createSpyObj<MongooseQuery<Sample>>('mongooseQuery', ['exec', 'populate']);
-            (<Spy>mongooseQuery.populate).and.returnValue(mongooseQuery);
-
-            find = spyOn(SampleModel, 'find').and.returnValue(mongooseQuery);
-        });
-
-        it('calls find on the model', () => {
-            query.condition = { this: 'is condition' };
-            query.options = { this: 'is options' };
-            query.fields = { this: 'is fields' };
-            
-            target.findMany(query, callback);
-            
-            expect(find).toHaveBeenCalledWith({ this: 'is condition' }, { this: 'is fields' }, { this: 'is options' });
-        });
-
-        it('calls populate for any properties specified in populate', () => {
-            query.populate = ['prop1', 'prop2'];
-
-            target.findMany(query, callback);
-
-            expect(mongooseQuery.populate).toHaveBeenCalledTimes(2);
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop1');
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop2');
-        });
-
-        it('passes the callback to exec on the mongooseQuery', () => {
-            target.findMany(query, callback);
-
-            expect(mongooseQuery.exec).toHaveBeenCalledWith(callback);
-        });
-    });
-    
-    describe('findOne', () => {
-        let findOne: Spy;
-        let query: FindSample;
-        let mongooseQuery: MongooseQuery<Sample>;
-
-        beforeEach(() => {
-            query = new FindSample();
-            mongooseQuery = jasmine.createSpyObj<MongooseQuery<Sample>>('mongooseQuery', ['exec', 'populate']);
-            (<Spy>mongooseQuery.populate).and.returnValue(mongooseQuery);
-
-            findOne = spyOn(SampleModel, 'findOne').and.returnValue(mongooseQuery);
-        });
-
-        it('calls find on the model', () => {
-            query.condition = { this: 'is condition' };
-            query.options = { this: 'is options' };
-            query.fields = { this: 'is fields' };
-            
-            target.findOne(query, callback);
-            
-            expect(findOne).toHaveBeenCalledWith({ this: 'is condition' }, { this: 'is fields' }, { this: 'is options' });
-        });
-
-        it('calls populate for any properties specified in populate', () => {
-            query.populate = ['prop1', 'prop2'];
-
-            target.findOne(query, callback);
-
-            expect(mongooseQuery.populate).toHaveBeenCalledTimes(2);
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop1');
-            expect(mongooseQuery.populate).toHaveBeenCalledWith('prop2');
-        });
-
-        it('passes the callback to exec on the mongooseQuery', () => {
-            target.findOne(query, callback);
-
-            expect(mongooseQuery.exec).toHaveBeenCalledWith(callback);
-        });
-    });
-    
-    describe('saveData', () => {
-        let save: Spy;
-        let dbWrite: UpdateSample;
-        let SpySampleModel: Spy;
-
-        beforeEach(() => {
-            SpySampleModel = jasmine.createSpy('SampleModel', SampleModel);
-            dbWrite = new UpdateSample();
-            dbWrite.model = <any>SpySampleModel;
-
-            save = jasmine.createSpy('save');
-            SpySampleModel.and.returnValue({ save });
-        });
-
-        it('instantiates the model with the supplied data', () => {
-            dbWrite.data = <Sample>{ thing: 25, };
-
-            target.saveData(dbWrite, callback);
-
-            expect(SpySampleModel).toHaveBeenCalledWith({ thing: 25 });
-        });
-
-        it('calls save on the model instance', () => {
-            target.saveData(dbWrite, callback);
-            
-            expect(save).toHaveBeenCalled();
-        });
-
-        it('calls the callback with errors from save', () => {
-            let err = new Error('something broke');
-            
-            save.and.callFake(callCallback(0, err));
-
-            target.saveData(dbWrite, callback);
-
-            expect(callback).toHaveBeenCalledWith(err, undefined);
-        });
-
-        it('calls the callback with record id from save', () => {
-            let record = { id: 'my id' };
-            
-            save.and.callFake(callCallback(0, null, record));
-
-            target.saveData(dbWrite, callback);
-
-            expect(callback).toHaveBeenCalledWith(null, 'my id');
-        });
-
-        it('calls the callback with nothing when no record is returned', () => {
-            save.and.callFake(callCallback(0));
-
-            target.saveData(dbWrite, callback);
-
-            expect(callback).toHaveBeenCalledWith(undefined, undefined);
-        });
-    });
-
-    describe('updateRecordById', () => {
-        let findByIdAndUpdate: Spy;
-        let dbWriteById: UpdateSampleById;
         
+        it('gets the collection from the database', () => {
+            deleteSample.collection = 'test collection';
+
+            target.deleteOne(deleteSample, callback);
+
+            expect(db.collection).toHaveBeenCalledWith('test collection');
+        });
+
+        it('callls deleteOne on the collection', () => {
+            deleteSample.filter = { this: 'is a filter' };
+            deleteSample.options = { w: 'this is the options' };
+            target.deleteOne(deleteSample, callback);
+
+            expect(collection.deleteOne).toHaveBeenCalledWith({ this: 'is a filter' }, { w: 'this is the options' }, callback);
+        });
+    });
+
+    describe('find', () => {
+        let findSample: FindSample;
+        let cursor: Cursor;
+        let mapResults: Spy;
+
         beforeEach(() => {
-            findByIdAndUpdate = spyOn(SampleModel, 'findByIdAndUpdate');
-            dbWriteById = new UpdateSampleById();
-        })
+            cursor = jasmine.createSpyObj<Cursor>('cursor', ['project', 'skip', 'limit', 'next', 'toArray']);
+            
+            findSample = new FindSample();
+            spy(collection.find).and.returnValue(cursor)
+
+            spy(cursor.project).and.returnValue(cursor);
+            spy(cursor.skip).and.returnValue(cursor);
+            spy(cursor.limit).and.returnValue(cursor);
+
+            mapResults = spyOn(findSample, 'mapResults');
+        });
+            
+        describe('findMany', () => {
+            beforeEach(() => {
+                spyOn(target, 'findOne').and.throwError('not supposed to be testing findOne here');
+            });
+
+            it('gets the collection from the database', () => {
+                findSample.collection = 'test collection';
+
+                target.findMany(findSample, callback);
+
+                expect(db.collection).toHaveBeenCalledWith('test collection');
+            });
+
+            it('calls find on the collection', () => {
+                findSample.filter = { this: 'is the filter' };
+                
+                target.findMany(findSample, callback);
+
+                expect(collection.find).toHaveBeenCalledWith({ this: 'is the filter' });
+            });
+
+            it('calls project with fields if query contains fields', () => {
+                findSample.fields = { these: 'are some fields' };
+
+                target.findMany(findSample, callback);
+
+                expect(cursor.project).toHaveBeenCalledWith({ these: 'are some fields' });
+            });
+
+            it('does not call project if the query contains no fields', () => {
+                findSample.fields = undefined;
+
+                target.findMany(findSample, callback);
+
+                expect(cursor.project).not.toHaveBeenCalled();
+            });
+
+            it('calls skip and limit if paging is specified on the query', () => {
+                findSample.paging = { limit: 1, offset: 2 };
+
+                target.findMany(findSample, callback);
+
+                expect(cursor.skip).toHaveBeenCalledWith(2);
+                expect(cursor.limit).toHaveBeenCalledWith(1);
+            });
+
+            it('does not call skip or limit if paging is not specified on the query', () => {
+                findSample.paging = undefined;
+
+                target.findMany(findSample, callback);
+
+                expect(cursor.skip).not.toHaveBeenCalled();
+                expect(cursor.limit).not.toHaveBeenCalled();
+            });
+
+            it('calls toArray on the cursor', () => {
+                target.findMany(findSample, callback);
+
+                expect(cursor.toArray).toHaveBeenCalled();
+            });
+
+            it('passes only error to callback if toArray returns an error', () => {
+                let err = new Error('toArray broke');
+                spy(cursor.toArray).and.callFake(callCallback(0, err));
+                
+                target.findMany(findSample, callback);
+
+                expect(callback).toHaveBeenCalledWith(err);
+                expect(mapResults).not.toHaveBeenCalled();
+            });
+
+            it('calls mapResults for each record', () => {
+                let record1 = { this: 'is record 1' };
+                let record2 = { this: 'is record 2' };
+                let record3 = { this: 'is record 3' };
+                spy(cursor.toArray).and.callFake(callCallback(0, null, [record1, record2, record3]))
+                
+                target.findMany(findSample, callback);
+
+                expect(mapResults).toHaveBeenCalledTimes(3);
+                expect(mapResults).toHaveBeenCalledWith(record1, jasmine.anything());
+                expect(mapResults).toHaveBeenCalledWith(record2, jasmine.anything());
+                expect(mapResults).toHaveBeenCalledWith(record3, jasmine.anything());
+            });
+
+            it('calls callback when all mapResults have returned', () => {
+                let record1 = { this: 'is record 1' };
+                let record2 = { this: 'is record 2' };
+                let record3 = { this: 'is record 3' };
+                spy(cursor.toArray).and.callFake(callCallback(0, null, [record1, record2, record3]))
+
+                spy(mapResults).and.callFake((record: any, cb: NodeCallback<Sample>) => {
+                    cb(null, record);
+                });
+
+                target.findMany(findSample, callback);
+
+                expect(callback).toHaveBeenCalledWith(null, [record1, record2, record3]);
+            });
+
+            it('calls callback with error when any mapResults returns an error', () => {
+                let err = new Error('record 1 broke');
+                let record1 = { this: 'is record 1' };
+                let record2 = { this: 'is record 2' };
+                let record3 = { this: 'is record 3' };
+                spy(cursor.toArray).and.callFake(callCallback(0, null, [record1, record2, record3]))
+
+                spy(mapResults).and.callFake((record: any, cb: NodeCallback<Sample>) => {
+                    if (record === record1) {
+                        cb(err);
+                    } else {
+                        cb(null, record);
+                    }
+                });
+
+                target.findMany(findSample, callback);
+
+                expect(callback).toHaveBeenCalledWith(err, [undefined, record2, record3]);
+            });
+        });
+
+        describe('findOne', () => {
+            beforeEach(() => {
+                spyOn(target, 'findMany').and.throwError('not supposed to be testing findMany here');
+            });
+            
+            it('gets the collection from the database', () => {
+                findSample.collection = 'test collection';
+
+                target.findOne(findSample, callback);
+
+                expect(db.collection).toHaveBeenCalledWith('test collection');
+            });
+
+            it('calls find on the collection', () => {
+                findSample.filter = { this: 'is the filter' };
+                
+                target.findOne(findSample, callback);
+
+                expect(collection.find).toHaveBeenCalledWith({ this: 'is the filter' });
+            });
+
+            it('calls project with fields if query contains fields', () => {
+                findSample.fields = { these: 'are some fields' };
+
+                target.findOne(findSample, callback);
+
+                expect(cursor.project).toHaveBeenCalledWith({ these: 'are some fields' });
+            });
+
+            it('does not call project if the query contains no fields', () => {
+                findSample.fields = undefined;
+
+                target.findOne(findSample, callback);
+
+                expect(cursor.project).not.toHaveBeenCalled();
+            });
+
+            it('calls limit on the cursor', () => {
+                target.findOne(findSample, callback);
+
+                expect(cursor.limit).toHaveBeenCalledWith(1);
+            });
+
+            it('calls next on the cursor', () => {
+                target.findOne(findSample, callback);
+
+                expect(cursor.next).toHaveBeenCalled();
+            });
+
+            it('passes only error to callback if next returns an error', () => {
+                let err = new Error('next broke');
+                spy(cursor.next).and.callFake(callCallback(0, err));
+                
+                target.findOne(findSample, callback);
+
+                expect(callback).toHaveBeenCalledWith(err);
+                expect(mapResults).not.toHaveBeenCalled();
+            });
+
+            it('calls mapResults with the record and callback', () => {
+                let record = { this: 'is the record' };
+                spy(cursor.next).and.callFake(callCallback(0, null, record));
+                
+                target.findOne(findSample, callback);
+
+                expect(mapResults).toHaveBeenCalledWith(record, callback);
+            });
+        });
+    });
+
+    describe('insert', () => {
+        let insertSample: InsertSample;
+
+        beforeEach(() => {
+            insertSample = new InsertSample();
+        });
         
-        it('calls findByIdAndUpdate on the model', () => {
-            dbWriteById.id = 'foo';
-            dbWriteById.data = <Sample>{ thing: 25, };
-            dbWriteById.options = { this: 'is options' };
-            
-            target.updateRecordById(dbWriteById, callback);
-            
-            expect(findByIdAndUpdate).toHaveBeenCalledWith('foo', { thing: 25, }, { this: 'is options' }, callback);
+        it('gets the collection from the database', () => {
+            insertSample.collection = 'test collection';
+
+            target.insert(insertSample, callback);
+
+            expect(db.collection).toHaveBeenCalledWith('test collection');
+        });
+
+        it('calls insertOne when query contains one document', () => {
+            insertSample.documents = [{ one: 'document' }];
+            insertSample.options = { w: 'this is the options' };
+
+            target.insert(insertSample, callback);
+
+            expect(collection.insertOne).toHaveBeenCalledWith({ one: 'document' }, { w: 'this is the options' }, callback);
+        });
+
+        it('calls insertMany when query contains multiple documents', () => {
+            insertSample.documents = [{ one: 'document' }, { another: 'document' }];
+            insertSample.options = { w: 'this is the options' };
+
+            target.insert(insertSample, callback);
+
+            expect(collection.insertMany).toHaveBeenCalledWith([{ one: 'document' }, { another: 'document' }], { w: 'this is the options' }, callback);
+        });
+    });
+
+    describe('update', () => {
+        let updateSample: UpdateSample;
+
+        beforeEach(() => {
+            updateSample = new UpdateSample();
+        });
+        
+        it('gets the collection from the database', () => {
+            updateSample.collection = 'test collection';
+
+            target.update(updateSample, callback);
+
+            expect(db.collection).toHaveBeenCalledWith('test collection');
+        });
+
+        it('calls updateOne when query contains one document', () => {
+            updateSample.documents = [{ one: 'document' }];
+            updateSample.options = { w: 'this is the options' };
+
+            target.insert(updateSample, callback);
+
+            expect(collection.insertOne).toHaveBeenCalledWith({ one: 'document' }, { w: 'this is the options' }, callback);
+        });
+
+        it('calls updateMany when query contains multiple documents', () => {
+            updateSample.documents = [{ one: 'document' }, { another: 'document' }];
+            updateSample.options = { w: 'this is the options' };
+
+            target.insert(updateSample, callback);
+
+            expect(collection.insertMany).toHaveBeenCalledWith([{ one: 'document' }, { another: 'document' }], { w: 'this is the options' }, callback);
         });
     });
 });
@@ -260,42 +355,33 @@ interface Sample extends Document {
     thing: number;
 }
 
-const SampleSchema = new Schema({
-    thing: { type: Number }
-})
+class DeleteSample implements DbDelete {
+    collection: string;
+    filter: Object;
+    options: CollectionOptions;
+}
 
-const SampleModel = model<Sample>('Sample', SampleSchema);
+class InsertSample implements DbInsert {
+    collection: string;
+	documents: Object[] = [];
+	options: CollectionInsertOneOptions;
+}
 
-class FindSampleById implements QueryById<Sample> {
-    id: string;
-    options: Object;
+class UpdateSample implements DbUpdate {
+    collection: string;
+	documents: Object[] = [];
+	filter: Object;
+	options: CollectionUpdateOptions;
+
+}
+
+class FindSample implements DbFind<Sample> {
+    collection: string;
+    filter: Object;
     fields: Object;
-    populate: string[];
+    paging: Paging;
+    mapResults(record: any, callback: NodeCallback<Sample>): void {
+        callback(null);
+    }
     
-    get model() {
-        return SampleModel;
-    }
-}
-
-class FindSample implements Query<Sample> {
-    condition: Object;
-    options: Object;
-    fields: Object;
-    populate: string[];
-
-    get model() {
-        return SampleModel;
-    }
-}
-
-class UpdateSample implements DbWrite<Sample> {
-    data: Sample;
-    model: Model<Sample>;
-}
-
-class UpdateSampleById implements DbWriteById<Sample> {
-    data: Sample;
-    model = SampleModel;
-    options: Object;
-    id: string;
 }

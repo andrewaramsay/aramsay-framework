@@ -80,7 +80,7 @@ describe('TypeMapper', () => {
 
     describe('mapArrayCallback', () => {
         let dataModels: DataModel[];
-        let spy: jasmine.Spy;
+        let callback: jasmine.Spy;
 
         beforeEach(() => {
             dataModels  = [
@@ -88,26 +88,26 @@ describe('TypeMapper', () => {
                 { someValue: 'item 2' },
                 { someValue: 'item 3' },
             ];
-            spy = jasmine.createSpy('callback', (err: Error, businessModels: BusinessModel[]) => {});
+            callback = jasmine.createSpy('callback', (err: Error, businessModels: BusinessModel[]) => {});
         });
         
         it('should create a callback that maps an array of items', () => {
-            target.mapArrayCallback(spy)(null, dataModels);
-            expect(spy).toHaveBeenCalledWith(null, [{ value: 'item 1' }, { value: 'item 2' }, { value: 'item 3' }]);
+            target.mapArrayCallback(callback)(null, dataModels);
+            expect(callback).toHaveBeenCalledWith(null, [{ value: 'item 1' }, { value: 'item 2' }, { value: 'item 3' }]);
         });
 
         it('should call callback with only error if an error is thrown', () => {
             let err = new Error('something broke');
 
-            target.mapArrayCallback(spy)(err);
+            target.mapArrayCallback(callback)(err);
 
-            expect(spy).toHaveBeenCalledWith(err);
+            expect(callback).toHaveBeenCalledWith(err);
         });
 
         it('should not map objects if an error is returned', () => {
             spyOn(target, 'toBusinessModel');
 
-            target.mapArrayCallback(spy)(new Error('something broke'));
+            target.mapArrayCallback(callback)(new Error('something broke'));
             
             expect(target.toBusinessModel).not.toHaveBeenCalled();
         });
@@ -183,7 +183,7 @@ describe('TypeMapper', () => {
 
     describe('mapFromArrayCallback', () => {
         let businessModel: BusinessModel[];
-        let spy: jasmine.Spy;
+        let callback: jasmine.Spy;
 
         beforeEach(() => {
             businessModel  = [
@@ -191,26 +191,26 @@ describe('TypeMapper', () => {
                 { value: 'item 2' },
                 { value: 'item 3' },
             ];
-            spy = jasmine.createSpy('callback');
+            callback = jasmine.createSpy('callback');
         });
         
         it('should create a callback that maps an array of items', () => {
-            target.mapFromArrayCallback(spy)(null, businessModel);
-            expect(spy).toHaveBeenCalledWith(null, [{ someValue: 'item 1' }, { someValue: 'item 2' }, { someValue: 'item 3' }]);
+            target.mapFromArrayCallback(callback)(null, businessModel);
+            expect(callback).toHaveBeenCalledWith(null, [{ someValue: 'item 1' }, { someValue: 'item 2' }, { someValue: 'item 3' }]);
         });
 
         it('should call callback with only error if an error is thrown', () => {
             let err = new Error('something broke');
 
-            target.mapFromArrayCallback(spy)(err);
+            target.mapFromArrayCallback(callback)(err);
 
-            expect(spy).toHaveBeenCalledWith(err);
+            expect(callback).toHaveBeenCalledWith(err);
         });
 
         it('should not map objects if an error is returned', () => {
             spyOn(target, 'fromBusinessModel');
 
-            target.mapFromArrayCallback(spy)(new Error('something broke'));
+            target.mapFromArrayCallback(callback)(new Error('something broke'));
             
             expect(target.fromBusinessModel).not.toHaveBeenCalled();
         });
