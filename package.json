@@ -1,6 +1,6 @@
 {
   "name": "aramsay-framework",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Node server components.",
   "main": "dist/index.js",
   "scripts": {
@@ -15,6 +15,10 @@
   ],
   "author": "Andrew Ramsay <aramsaybusiness@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andrewaramsay/aramsay-framework.git"
+  },
   "devDependencies": {
     "jasmine": "^2.5.2",
     "jasmine-ts": "0.0.3",
@@ -24,11 +28,10 @@
     "typings": "^1.4.0"
   },
   "dependencies": {
-    "aramsay-injector": "^1.0.1",
+    "aramsay-injector": "^1.0.2",
     "async": "^2.0.1",
     "core-js": "^2.4.1",
     "moment": "^2.15.1",
-    "mongodb": "^2.2.10",
-    "mongoose": "^4.6.2"
+    "mongodb": "^2.2.10"
   }
 }
