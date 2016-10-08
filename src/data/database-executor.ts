@@ -37,7 +37,7 @@ export class DatabaseExecutor {
 
         cursor.toArray((err, records) => {
             if (err) { return callback(err); }
-            map<any, T>(records, query.mapResults.bind(query), callback);
+            map<any, T>(records, (rec, cb) => query.mapResults(rec, cb), callback);
         });
     }
 

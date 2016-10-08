@@ -1,7 +1,11 @@
 {
-  "files": [
-    "index.ts",
+  "include": [
+    "src/**/*.ts",
     "typings/index.d.ts"
+  ],
+  "exclude": [
+    "src/**/*.spec.ts",
+    "node_modules/**/*"
   ],
   "compilerOptions": {
     "declaration": true,
