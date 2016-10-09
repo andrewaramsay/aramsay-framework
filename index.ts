@@ -2,7 +2,6 @@ import 'core-js';
 if (!Reflect.defineMetadata) {
 	require('reflect-metadata');
 }
-import 'aramsay-injector';
 
 export * from './src/common';
 export * from './src/data';
