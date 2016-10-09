@@ -7,7 +7,7 @@ export abstract class TypeMapper<TBusiness, TOther> {
     abstract fromBusinessModel(source: TBusiness, callback: NodeCallback<TOther>): void;
     
     toBusinessModels(source: TOther[], callback: NodeCallback<TBusiness[]>): void {
-        map(source, this.toBusinessModel.bind(this), callback);
+        map(source, (source, cb) => this.toBusinessModel(source, cb), callback);
     }
 
     mapCallback(callback: NodeCallback<TBusiness>): NodeCallback<TOther> {
@@ -25,7 +25,7 @@ export abstract class TypeMapper<TBusiness, TOther> {
     }
 
     fromBusinessModels(source: TBusiness[], callback: NodeCallback<TOther[]>): void {
-        map(source, this.fromBusinessModel.bind(this), callback);
+        map(source, (source, cb) => this.fromBusinessModel(source, cb), callback);
     }    
 
     mapFromCallback(callback: NodeCallback<TOther>): NodeCallback<TBusiness> {

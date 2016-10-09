@@ -1,14 +1,12 @@
 import { Injectable, Inject } from 'aramsay-injector';
-// import { DbWrite, DbWriteById, Query, QueryBase, QueryById } from './types';
-import { NodeCallback, VoidNodeCallback } from '../common';
 import { MongoClient, Db } from 'mongodb';
 import { map } from 'async';
 
 import { DbFind, DbDelete, DbInsert, DbUpdate } from './types';
+import { NodeCallback, VoidNodeCallback } from '../common';
+import { mongoDbInjectorToken } from '../dependency-injection/framework-module';
 
-export const mongoDbInjectorToken = 'aramsay-framework:MongoDb';
-
-@Injectable()
+@Injectable({ singleton: true })
 export class DatabaseExecutor {
     constructor(
         @Inject(mongoDbInjectorToken) private db: Db) {

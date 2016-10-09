@@ -4,7 +4,8 @@ var TypeMapper = (function () {
     function TypeMapper() {
     }
     TypeMapper.prototype.toBusinessModels = function (source, callback) {
-        async_1.map(source, this.toBusinessModel.bind(this), callback);
+        var _this = this;
+        async_1.map(source, function (source, cb) { return _this.toBusinessModel(source, cb); }, callback);
     };
     TypeMapper.prototype.mapCallback = function (callback) {
         var _this = this;
@@ -25,7 +26,8 @@ var TypeMapper = (function () {
         };
     };
     TypeMapper.prototype.fromBusinessModels = function (source, callback) {
-        async_1.map(source, this.fromBusinessModel.bind(this), callback);
+        var _this = this;
+        async_1.map(source, function (source, cb) { return _this.fromBusinessModel(source, cb); }, callback);
     };
     TypeMapper.prototype.mapFromCallback = function (callback) {
         var _this = this;

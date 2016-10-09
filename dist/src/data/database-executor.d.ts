@@ -1,7 +1,6 @@
-import { NodeCallback, VoidNodeCallback } from '../common';
 import { Db } from 'mongodb';
 import { DbFind, DbDelete, DbInsert, DbUpdate } from './types';
-export declare const mongoDbInjectorToken: string;
+import { NodeCallback, VoidNodeCallback } from '../common';
 export declare class DatabaseExecutor {
     private db;
     constructor(db: Db);

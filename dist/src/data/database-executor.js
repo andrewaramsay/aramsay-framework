@@ -14,7 +14,7 @@ var __param = (this && this.__param) || function (paramIndex, decorator) {
 var aramsay_injector_1 = require('aramsay-injector');
 var mongodb_1 = require('mongodb');
 var async_1 = require('async');
-exports.mongoDbInjectorToken = 'aramsay-framework:MongoDb';
+var framework_module_1 = require('../dependency-injection/framework-module');
 var DatabaseExecutor = (function () {
     function DatabaseExecutor(db) {
         this.db = db;
@@ -75,8 +75,8 @@ var DatabaseExecutor = (function () {
         }
     };
     DatabaseExecutor = __decorate([
-        aramsay_injector_1.Injectable(),
-        __param(0, aramsay_injector_1.Inject(exports.mongoDbInjectorToken)), 
+        aramsay_injector_1.Injectable({ singleton: true }),
+        __param(0, aramsay_injector_1.Inject(framework_module_1.mongoDbInjectorToken)), 
         __metadata('design:paramtypes', [mongodb_1.Db])
     ], DatabaseExecutor);
     return DatabaseExecutor;
