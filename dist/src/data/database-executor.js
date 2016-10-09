@@ -40,7 +40,7 @@ var DatabaseExecutor = (function () {
             if (err) {
                 return callback(err);
             }
-            async_1.map(records, query.mapResults.bind(query), callback);
+            async_1.map(records, function (rec, cb) { return query.mapResults(rec, cb); }, callback);
         });
     };
     DatabaseExecutor.prototype.findOne = function (query, callback) {
