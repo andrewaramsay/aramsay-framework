@@ -6,7 +6,6 @@ require('core-js');
 if (!Reflect.defineMetadata) {
     require('reflect-metadata');
 }
-require('aramsay-injector');
 __export(require('./src/common'));
 __export(require('./src/data'));
 __export(require('./src/mapping'));

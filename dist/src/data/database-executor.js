@@ -75,7 +75,7 @@ var DatabaseExecutor = (function () {
         }
     };
     DatabaseExecutor = __decorate([
-        aramsay_injector_1.Injectable({ singleton: true }),
+        aramsay_injector_1.Injectable({ instanceMode: aramsay_injector_1.InstanceMode.SingleInstance }),
         __param(0, aramsay_injector_1.Inject(framework_module_1.mongoDbInjectorToken)), 
         __metadata('design:paramtypes', [mongodb_1.Db])
     ], DatabaseExecutor);
